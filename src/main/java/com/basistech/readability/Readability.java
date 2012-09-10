@@ -18,7 +18,6 @@
 
 package com.basistech.readability;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -31,8 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 
-import org.xml.sax.SAXException;
-
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -103,17 +101,13 @@ public class Readability {
 
         String content = pageReader.readPage(url);
 
-        try {
-            document = nekoParser.parse(content, url);
-        } catch (SAXException e) {
-            LOG.error("Failed to parse " + url, e);
-            impossible = true;
-            return;
-        } catch (IOException e) {
-            LOG.error("Failed to parse " + url, e);
-            impossible = true;
-            return;
-        }
+	document = Jsoup.parse(content);
+
+	if (document.getElementsByTag("body").size() == 0) {
+	    LOG.error("no body to parse " + url);
+	    impossible = true;
+	    throw new PageReadException("no body to parse");
+	}
 
         init(); // this needs another name, it does all the work.
         if (readAllPages && nextPageLink != null) {
@@ -139,6 +133,14 @@ public class Readability {
                 e.remove();
             }
         }
+    }
+
+    //some pages have a <p></p> combiantion to generate a space, but
+    //readability seems to ignore it.  convert then to a single <p>
+    private void handlePP() {
+	String inner = document.body().html();
+	inner.replaceAll("<p></p>", "<p>");
+	document.body().html(inner);
     }
 
     private void handleDoubleBr() {
@@ -191,6 +193,7 @@ public class Readability {
         /*
          * Note, this is pretty costly as far as processing goes. Maybe optimize later.
          */
+        handlePP();
         handleDoubleBr();
         fontsToSpans();
     }
@@ -221,7 +224,10 @@ public class Readability {
          * first page
          */
         parsedPages.add(normalizeTrailingSlash(givenUrl));
-        nextPageLink = findNextPageLink(body);
+        //respect the readAllPages flag, very important if a stringPage
+        if (readAllPages)
+	    nextPageLink = findNextPageLink(body);
+
         if (!notFirstPage) {
             title = getArticleTitle();
         }
@@ -410,6 +416,7 @@ public class Readability {
                     nodesToScore.remove(node);
                     nodesToScore.add(newElement);
                 } else {
+
                     /* EXPERIMENTAL *//*
                                        * grab just child text and wrap each chunk in a p
                                        */
@@ -532,7 +539,7 @@ public class Readability {
             articleContent.attr("id", "readability-content");
         }
         double siblingScoreThreshold = Math.max(10, getContentScore(topCandidate) * 0.2);
-        List<Element> siblingNodes = topCandidate.siblingElements();
+        List<Element> siblingNodes = topCandidate.parent().children();
 
         for (Element siblingNode : siblingNodes) {
             boolean scored = isElementScored(siblingNode);
@@ -789,7 +796,10 @@ public class Readability {
          */
         cleanConditionally(articleContent, "table");
         cleanConditionally(articleContent, "ul");
-        cleanConditionally(articleContent.child(0), "div");
+        //could have no children, will crash then
+        if (articleContent.children().size() != 0) {
+            cleanConditionally(articleContent.child(0), "div");
+        }
 
         /* Remove extra paragraphs */
         Elements articleParagraphs = articleContent.getElementsByTag("p");

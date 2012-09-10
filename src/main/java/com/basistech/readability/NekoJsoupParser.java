@@ -30,6 +30,7 @@ import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import org.cyberneko.html.parsers.SAXParser;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
@@ -131,5 +132,9 @@ public class NekoJsoupParser {
         nekoParser.setErrorHandler(new LocalErrorHandler());
         nekoParser.parse(source);
         return document;
+    }
+
+    public Document parse(String data) throws SAXException, IOException {
+	return Jsoup.parse(data);
     }
 }

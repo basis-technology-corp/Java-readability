@@ -102,9 +102,9 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>nekohtml</groupId>
+			<groupId>net.sourceforge.nekohtml</groupId>
 			<artifactId>nekohtml</artifactId>
-			<version>1.9.13</version>
+			<version>1.9.16</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>

@@ -26,6 +26,10 @@ public class PageReadException extends Exception {
         super();
     }
 
+    public PageReadException(String message) {
+	super(message);
+    }
+
     public PageReadException(String message, Throwable cause) {
         super(message, cause);
     }

@@ -36,10 +36,14 @@ final class Patterns {
     static final Pattern NEGATIVE = ciPattern("(combx|comment|com-|contact|foot|footer|footnote|masthead|media|meta|outbrain|promo|related|scroll|shoutbox|sidebar|sponsor|shopping|tags|tool|widget)");
     static final Pattern PREV_LINK = ciPattern("(prev|earl|old|new|<|«)");
     static final Pattern POSITIVE = ciPattern("(article|body|content|entry|hentry|main|page|pagination|post|text|blog|story)");
-    static final Pattern REPLACE_BRS = ciPattern("(<br[^>]*>[ \n\r\t]*){2,}");
+    //static final Pattern REPLACE_BRS = ciPattern("(<br[^>]*>[ \n\r\t]*){2,}");
+    //above causes a stack overflow crash on some pages, bottom behaves differnetly for some reason
+    static final Pattern REPLACE_BRS = ciPattern("(<br[^>]*>[ \n\r\t]*)\1+");
 
     static final Pattern UNLIKELY_CANDIDATES = ciPattern("combx|comment|community|disqus|extra|foot|header|menu|remark|rss|shoutbox|sidebar|sponsor|ad-break|agegate|pagination|pager|popup|tweet|twitter");
     static final Pattern OK_MAYBE_ITS_A_CANDIDATE = ciPattern("and|article|body|column|main|shadow");
+    //below works better with espn "recap" pages, but unsure that's a good reason to change behavior.
+    //static final Pattern OK_MAYBE_ITS_A_CANDIDATE = ciPattern("and|article|body|column|main|shadow|subheader");
     static final Pattern ENDS_WITH_DOT = Pattern.compile("\\.( |$)");
     static final Pattern DIGIT = Pattern.compile("\\d");
     static final Pattern BAR_DASH = Pattern.compile(" [\\|\\-] ");
